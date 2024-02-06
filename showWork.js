@@ -1,3 +1,17 @@
+const token = localStorage.getItem("token");
+if (token) {
+    const logLabel = document.getElementById("logLabel");
+    logLabel.innerHTML = "Logout";
+    logLabel.setAttribute("href", "./index.html")
+    logLabel.addEventListener("click", () =>{
+        localStorage.removeItem("token");
+        window.location.reload();
+    })
+} else {
+    const bandeau = document.getElementsByClassName("bandeau")[0];
+    bandeau.style.display = "none";
+}
+
 async function showWorks(){
     const reponseProject = await fetch('http://localhost:5678/api/works');
     const projects = await reponseProject.json();
@@ -36,6 +50,9 @@ async function showWorks(){
     for (let i = 0; i < uniqueCategories.length; i++) {
         const projectCat = uniqueCategories[i];
 
+        const buttonArticle = document.createElement("article");
+        buttonArticle.className = "apparence";
+
         const Button = document.createElement("input");
         Button.setAttribute("type", "checkbox");
         Button.id = projectCat.id;
@@ -43,11 +60,22 @@ async function showWorks(){
         Button.name = projectCat.name;
         Button.addEventListener("click", async()=>{
             await hideWork();
-            await filterButton()
+            await filterButton();
         });
 
-        SecPortfolio.append(Button);
+        const text = document.createElement("p");
+        text.textContent = Button.name;
+        text.className = "textButton";
+        const backDiv = document.createElement("div");
+        SecPortfolio.append(buttonArticle);
+        buttonArticle.append(Button);
+        buttonArticle.append(backDiv);
+        backDiv.append(text);
+        DivGallery.insertAdjacentElement('beforebegin', buttonArticle);
     }
+
+    const masterArticle = document.createElement("article")
+    masterArticle.className = "apparence";
 
     const masterButton = document.createElement("input");
     masterButton.setAttribute("type", "checkbox");
@@ -56,9 +84,20 @@ async function showWorks(){
     masterButton.addEventListener("click", async()=>{
         affichage()
     })
-    masterButton.checked = true
+    masterButton.checked = true;
 
-    SecPortfolio.append(masterButton);
+    masterArticle.append(masterButton);
+    const text = document.createElement("p");
+    text.textContent = "Tout";
+    text.className = "textButton";
+    const backDiv = document.createElement("div");
+    masterArticle.append(backDiv);
+    backDiv.append(text);
+
+
+    const Title = SecPortfolio.querySelector('h2');
+
+    Title.insertAdjacentElement('afterend', masterArticle);
 
 }
 
@@ -179,20 +218,29 @@ async function adminGestion () {
     const projects = await affProj.json();
 
     const divModal = document.getElementById('modalDiv');
+    const grpImg = document.createElement("div");
+    grpImg.className= "grpImg";
+    grpImg.id = "grpDestruction"
+    divModal.appendChild(grpImg);
+    const chgModal = document.getElementById('chgModal');
+    chgModal.insertAdjacentElement('beforebegin', grpImg);
 
     for (let i = 0; i < projects.length; i++) {
         const project = projects[i];
         
         const figure = document.createElement("figure");
         const imageElement = document.createElement("img");
-        const destruction =  document.createElement('input')
+        const destruction =  document.createElement('button');
 
         imageElement.src = project.imageUrl;
+        imageElement.className = "preview";
         figure.id = project.id;
         figure.className = "imgModal";
 
-        destruction.type = 'button';
-        destruction.value = 'Supprimer';
+        const destructionIcon = document.createElement('i');
+        destructionIcon.classList.add('fa-solid', 'fa-trash-alt');
+
+        destruction.appendChild(destructionIcon);
         destruction.addEventListener('click', async () => {
             const confirmDeletion = confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');
             if (confirmDeletion) {
@@ -222,16 +270,60 @@ async function adminGestion () {
             }
         });
 
+        
+        
 
-        divModal.appendChild(figure);
+        grpImg.appendChild(figure);
         figure.appendChild(imageElement);
-        figure.appendChild(destruction)
+        figure.appendChild(destruction);
     }
 
 const form = document.getElementById('addProjectForm');
 const nameInput = document.getElementById('projectName');
 const categoryInput = document.getElementById('projectCategory');
 const imageInput = document.getElementById('projectImage');
+const submitButton = document.getElementById('couleurBoutton');
+const previewImage = document.getElementById('previewImage');
+
+imageInput.addEventListener('change', function() {
+    const file = this.files[0];
+    const missingImg = document.getElementById('missingImg');
+    const imgButton = document.getElementById('imgButton');
+    const imgText = document.getElementById('imgText');
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        previewImage.style.display = 'inline-block';
+        missingImg.style.display = 'none';
+        imgButton.style.display = 'none';
+        imgText.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      previewImage.src = '#';
+      previewImage.style.display = 'none';
+      missingImg.style.display = 'block';
+      imgButton.style.display = 'flex';
+      imgText.style.display = 'block';
+    }
+  });
+
+form.addEventListener('input', function() {
+    const imageValid = imageInput.files.length > 0;
+    const nameValid = nameInput.value.trim() !== '';
+    const categoryValid = categoryInput.value.trim() !== '';
+
+    if (imageValid && nameValid && categoryValid) {
+      submitButton.removeAttribute('disabled');
+      submitButton.style.border = "#1D6154"
+      submitButton.style.backgroundColor = "#1D6154"
+    } else {
+      submitButton.setAttribute('disabled', 'true');
+      submitButton.style.border = "#A7A7A7"
+      submitButton.style.backgroundColor = "#A7A7A7"
+    }
+  });
 
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -264,6 +356,34 @@ form.addEventListener('submit', async (event) => {
         console.error('Erreur lors de l\'ajout du projet : ', error);
     }
 });
-}
+
+const retourModal = document.getElementById('retour');
+
+const T1 = document.getElementById('T1');
+const T2 = document.getElementById('T2');
+const grpDestruction = document.getElementById('grpDestruction');
+const allerModal = document.getElementById('chgModal');
+
+retourModal.addEventListener('click', async() => {
+    retourModal.style.display = 'none';
+    T1.style.display = 'block';
+    T2.style.display = 'none';
+    form.style.display = 'none';
+    allerModal.style.display = 'flex';
+    grpDestruction.style.display = 'flex';
+});
+
+allerModal.addEventListener('click', async() => {
+    retourModal.style.display = 'flex';
+    T1.style.display = 'none';
+    T2.style.display = 'block';
+    form.style.display = 'flex';
+    allerModal.style.display = 'none';
+    grpDestruction.style.display = 'none';
+});
+};
 
 adminGestion ();
+
+
+
