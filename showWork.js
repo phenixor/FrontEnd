@@ -12,30 +12,32 @@ if (token) {
     bandeau.style.display = "none";
 }
 
+function displayProjectInWorks(project) {
+    const DivGallery = document.getElementsByClassName("gallery")[0];
+    const figure = document.createElement("figure");
+    const imageElement = document.createElement("img");
+    const textElement = document.createElement("figcaption");
+
+    imageElement.src = project.imageUrl;
+    textElement.innerText = project.title;
+    figure.className = project.categoryId;
+    figure.id = project.id
+
+
+    DivGallery.appendChild(figure);
+    figure.appendChild(imageElement);
+    figure.appendChild(textElement);
+}
+
 async function showWorks(){
     const reponseProject = await fetch('http://localhost:5678/api/works');
     const projects = await reponseProject.json();
-
-    const DivGallery = document.getElementsByClassName("gallery")[0];
     
-    DivGallery.innerHTML ='';
 
     for (let i = 0; i < projects.length; i++) {
         const project = projects[i];
-        
-        const figure = document.createElement("figure");
-        const imageElement = document.createElement("img");
-        const textElement = document.createElement("figcaption");
-
-        imageElement.src = project.imageUrl;
-        textElement.innerText = project.title;
-        figure.className = project.category.id;
-        figure.id = project.id
-
-
-        DivGallery.appendChild(figure);
-        figure.appendChild(imageElement);
-        figure.appendChild(textElement);
+        displayProjectInWorks(project);
+       
     }
 
     const SecPortfolio = document.getElementById("portfolio");
@@ -62,6 +64,9 @@ async function showWorks(){
             await hideWork();
             await filterButton();
         });
+
+        
+        const DivGallery = document.getElementsByClassName("gallery")[0];
 
         const text = document.createElement("p");
         text.textContent = Button.name;
@@ -205,29 +210,8 @@ window.addEventListener('keydown', function (e) {
 })
 
 /*Affichage éléments + suppression et ajout dans la modal*/
-
-async function adminGestion () {
-    
-    const token = localStorage.getItem('token')
-
-    const affProj = await fetch('http://localhost:5678/api/works', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-    const projects = await affProj.json();
-
-    const divModal = document.getElementById('modalDiv');
-    const grpImg = document.createElement("div");
-    grpImg.className= "grpImg";
-    grpImg.id = "grpDestruction"
-    divModal.appendChild(grpImg);
-    const chgModal = document.getElementById('chgModal');
-    chgModal.insertAdjacentElement('beforebegin', grpImg);
-
-    for (let i = 0; i < projects.length; i++) {
-        const project = projects[i];
-        
+function displayProjectInModal (project) {
+        const grpImg = document.getElementById('grpDestruction')
         const figure = document.createElement("figure");
         const imageElement = document.createElement("img");
         const destruction =  document.createElement('button');
@@ -269,13 +253,34 @@ async function adminGestion () {
                 }
             }
         });
-
-        
-        
-
         grpImg.appendChild(figure);
         figure.appendChild(imageElement);
         figure.appendChild(destruction);
+}
+
+async function adminGestion () {
+    
+    const token = localStorage.getItem('token')
+
+    const affProj = await fetch('http://localhost:5678/api/works', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    const projects = await affProj.json();
+
+    const divModal = document.getElementById('modalDiv');
+    const grpImg = document.createElement("div");
+    grpImg.className= "grpImg";
+    grpImg.id = "grpDestruction"
+    divModal.appendChild(grpImg);
+    const chgModal = document.getElementById('chgModal');
+    chgModal.insertAdjacentElement('beforebegin', grpImg);
+
+    for (let i = 0; i < projects.length; i++) {
+        const project = projects[i];
+        
+        displayProjectInModal(project);
     }
 
 const form = document.getElementById('addProjectForm');
@@ -348,6 +353,11 @@ form.addEventListener('submit', async (event) => {
         });
 
         if (response.ok) {
+            const project = await response.json()
+            console.log('Projet ajouté avec succès !');
+            displayProjectInModal(project);
+            displayProjectInWorks(project);
+
             console.log('Projet ajouté avec succès !');
         } else {
             console.error('Échec lors de l\'ajout du projet.');
