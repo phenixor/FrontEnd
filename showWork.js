@@ -1,6 +1,7 @@
 const token = localStorage.getItem("token");
 if (token) {
     const logLabel = document.getElementById("logLabel");
+
     logLabel.innerHTML = "Logout";
     logLabel.setAttribute("href", "./index.html")
     logLabel.addEventListener("click", () =>{
@@ -103,6 +104,14 @@ async function showWorks(){
     const Title = SecPortfolio.querySelector('h2');
 
     Title.insertAdjacentElement('afterend', masterArticle);
+
+    if (token) {
+        const Buttons = document.getElementsByClassName("apparence");
+        Array.from(Buttons).forEach(button => {
+            button.style.height = "0px";
+            button.style.opacity = "0";
+        });
+    }
 
 }
 
